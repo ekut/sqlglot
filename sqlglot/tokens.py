@@ -64,6 +64,8 @@ class _TokenizerBase:
     NUMERIC_ESCAPES: t.ClassVar[dict[str, tuple[int, int, int, int]]]
     DROP_UNKNOWN_ESCAPES: t.ClassVar[bool]
     NESTED_COMMENTS: t.ClassVar[bool]
+    COMMENTS_REQUIRE_BOUNDARY: t.ClassVar[set[str]]
+    COMMENTS_TERMINATE_AT_NEWLINE_ONLY: t.ClassVar[bool]
     TOKENS_PRECEDING_HINT: t.ClassVar[set[TokenType]]
     HEREDOC_STRING_ALTERNATIVE: t.ClassVar[TokenType]
     COMMENTS: t.ClassVar[list[str | tuple[str, str]]]
@@ -193,6 +195,8 @@ class Tokenizer(_TokenizerBase):
     DROP_UNKNOWN_ESCAPES = False
 
     NESTED_COMMENTS = True
+    COMMENTS_REQUIRE_BOUNDARY: t.ClassVar[set[str]] = set()
+    COMMENTS_TERMINATE_AT_NEWLINE_ONLY = False
 
     HINT_START = "/*+"
 
@@ -568,6 +572,8 @@ class Tokenizer(_TokenizerBase):
             commands=self.COMMANDS,
             command_prefix_tokens=self.COMMAND_PREFIX_TOKENS,
             nested_comments=self.NESTED_COMMENTS,
+            comments_require_boundary=self.COMMENTS_REQUIRE_BOUNDARY,
+            comments_terminate_at_newline_only=self.COMMENTS_TERMINATE_AT_NEWLINE_ONLY,
             hint_start=self.HINT_START,
             tokens_preceding_hint=self.TOKENS_PRECEDING_HINT,
             has_bit_strings=bool(self.BIT_STRINGS),

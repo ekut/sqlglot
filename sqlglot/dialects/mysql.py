@@ -78,6 +78,8 @@ class MySQL(Dialect):
         ESCAPE_FOLLOW_CHARS = ["0", "b", "n", "r", "t", "Z", "%", "_"]
 
         NESTED_COMMENTS = False
+        COMMENTS_REQUIRE_BOUNDARY = {"--"}
+        COMMENTS_TERMINATE_AT_NEWLINE_ONLY = True
 
         KEYWORDS = {
             **tokens.Tokenizer.KEYWORDS,
