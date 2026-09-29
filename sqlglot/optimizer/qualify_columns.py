@@ -610,11 +610,29 @@ def _convert_columns_to_dots(scope: Scope, resolver: Resolver) -> None:
         is_star = isinstance(column.this, exp.Star)
         column_table: str | exp.Identifier | None = column.table
         dot_parts = column.meta.pop("dot_parts", [])
+        root_resolver: Resolver | None = None
+        if (
+            not is_star
+            and column.db
+            and not column.catalog
+            and column_table in scope.selected_sources
+        ):
+            for candidate_resolver in itertools.chain((resolver,), resolver.outer_resolvers()):
+                if column.db not in candidate_resolver.scope.selected_sources:
+                    continue
+                if column_table in candidate_resolver.get_source_columns(column.db):
+                    root_resolver = candidate_resolver
+                break
         if (
             column_table
-            and (column_table not in scope.selected_sources or (is_star and column.db))
             and (
-                is_star
+                column_table not in scope.selected_sources
+                or (is_star and column.db)
+                or root_resolver
+            )
+            and (
+                root_resolver
+                or is_star
                 or not scope.parent
                 or column_table not in scope.parent.sources
                 or not scope.is_correlated_subquery
@@ -623,10 +641,11 @@ def _convert_columns_to_dots(scope: Scope, resolver: Resolver) -> None:
             root, *parts = column.parts
             was_qualified = False
 
-            # Unlike columns, correlated stars can't be deferred to the outer scopes, since they
-            # must be expanded in this one, so they're resolved against those scopes as well
+            # Correlated stars cannot be deferred; qualified paths use their root source's resolver.
             resolvers: t.Iterable[Resolver] = (
-                itertools.chain((resolver,), resolver.outer_resolvers()) if is_star else (resolver,)
+                itertools.chain((resolver,), resolver.outer_resolvers())
+                if is_star
+                else (root_resolver or resolver,)
             )
             for source_resolver in resolvers:
                 selected_sources = source_resolver.scope.selected_sources
